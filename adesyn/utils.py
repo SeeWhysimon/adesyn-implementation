@@ -18,7 +18,7 @@ def medi_imread(path):
     
     return img_file
 
-def save_3dimg (save_path, img_file, img):
+def save_3dimg(save_path, img_file, img):
 
     seg2_file = sitk.GetImageFromArray(img)
     spacing = img_file.GetSpacing()
@@ -80,8 +80,8 @@ def gradient_penalty(y, x,device):
                                 only_inputs=True)[0]
 
     dydx = dydx.view(dydx.size(0), -1)
-    dydx_l2norm = torch.sqrt(torch.sum(dydx**2, dim=1))
-    return torch.mean((dydx_l2norm-1)**2)
+    dydx_l2norm = torch.sqrt(torch.sum(dydx ** 2, dim=1))
+    return torch.mean((dydx_l2norm - 1) ** 2)
 
 class ADNI_MRI(data.Dataset):
     """Dataset class for the ADNI dataset."""

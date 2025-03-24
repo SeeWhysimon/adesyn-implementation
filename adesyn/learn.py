@@ -41,7 +41,7 @@ def train(args, netG, net2D, net3D, device):
     print(fixed_target.shape)
 
     ### training start ###
-    for epoch in range(args.init_epochs,args.epochs):
+    for epoch in range(args.init_epochs, args.epochs):
         epoch_start=time.time()
         for i in range(args.niter):
 

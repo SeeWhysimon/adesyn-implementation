@@ -61,78 +61,40 @@ def medi_imread_test():
     print(f"✅ Origin: {img.GetOrigin()}")
     print(f"✅ Spacing: {img.GetSpacing()}\n")
 
-def augmentation_2d_test(n_slices, img_dir=None):
-    if img_dir is None:
-        n_slices = 5
-        img_size = 128
-        fake_img = np.random.randint(0, 256, size=(n_slices, img_size, img_size)).astype(np.uint8)
-        print(f"Origin: {fake_img.shape}")
+def ADNI_MRI_test(img_dir="../data/NP_3D/setA", nserial=3, mode="train", visualize=False):
+    dataset = utils.ADNI_MRI(image_dir=img_dir, nserial=nserial, mode=mode)
+    print(f"\n📦 总共加载图像数量: {len(dataset)}")
 
-        # 直接跳过 __init__，只取方法
-        dummy = object.__new__(utils.ADNI_MRI)
-        aug_2d = utils.ADNI_MRI.augmentation_2d
-        # 或者 bind 方法：
-        dummy.augmentation_2d = types.MethodType(aug_2d, dummy)
+    # 读取第一张图像
+    aug2d_img, label_out, aug3d_img = dataset[0]
 
-        aug_img = dummy.augmentation_2d(np.copy(fake_img))
-        print(f"After: {aug_img.shape}")
+    # 获取原始图像维度
+    raw_path = dataset.dataset[0][0]  # .npy 文件路径
+    raw_data = np.load(raw_path)
+    print(f"📐 原始图像 shape: {raw_data.shape}")  # [depth, H, W]
 
-        fig, axs = plt.subplots(1, 2, figsize=(10, 5))
-        axs[0].imshow(fake_img[0], cmap='gray')
-        axs[0].set_title("Origin Slice 0")
-        axs[1].imshow(aug_img[0, 0].numpy(), cmap='gray')
-        axs[1].set_title("After Slice 0")
+    print(f"🎨 增强后 2D 图像 shape: {aug2d_img.shape}")   # [nserial, 1, H, W]
+    print(f"🧾 标签 shape: {label_out.shape}")             # [nserial, 1]
+    print(f"🧱 增强后 3D 图像 shape: {aug3d_img.shape}")   # [nserial, H, W]（没加 channel）
+
+    if visualize:
+        # 可视化对比原图 vs 增强后图（第0层）
+        fig, axs = plt.subplots(1, 3, figsize=(15, 5))
+
+        axs[0].imshow(raw_data[50], cmap='gray')
+        axs[0].set_title("origin Slice 50")
+
+        axs[1].imshow(aug2d_img[0, 0].numpy(), cmap='gray')
+        axs[1].set_title("2D aud Slice 0")
+
+        axs[2].imshow(aug3d_img[0].numpy(), cmap='gray')
+        axs[2].set_title("3D aug Slice 0")
+
         for ax in axs:
             ax.axis('off')
+
         plt.tight_layout()
         plt.show()
-
-    else:
-        files = sorted([f for f in os.listdir(img_dir) if f.endswith(".nii")])
-    
-        if not files:
-            print("💩 没有找到 .nii 文件")
-            return
-
-        # 选第一个图像来测试
-        file_path = os.path.join(img_dir, files[0])
-        print(f"📂 加载图像：{file_path}")
-
-        # 读取并转为 numpy 数组（SimpleITK 默认 [depth, height, width]）
-        img_sitk = sitk.ReadImage(file_path)
-        img_arr = sitk.GetArrayFromImage(img_sitk)  # shape: [slices, h, w]
-        print(f"✅ 图像原始 shape: {img_arr.shape}")
-
-        # 检查是否符合我们想要的 5 个切片
-        if img_arr.shape[0] != n_slices:
-            print("⚠️ 警告：切片数量不是 5, 请检查图像格式")
-            return
-
-        # 做一份副本用于测试
-        fake_img = np.copy(img_arr)
-
-        # 绑定类方法（跳过 __init__）
-        dummy = object.__new__(utils.ADNI_MRI)
-        aug_2d = utils.ADNI_MRI.augmentation_2d
-        dummy.augmentation_2d = types.MethodType(aug_2d, dummy)
-
-        # 增广
-        aug_img = dummy.augmentation_2d(np.copy(fake_img))
-
-        print(f"✨ 增广后 shape: {aug_img.shape}")
-
-        # 可视化原图 vs 增广图（第0层）
-        fig, axs = plt.subplots(1, 2, figsize=(10, 5))
-        axs[0].imshow(fake_img[0], cmap='gray')
-        axs[0].set_title("origin Slice 0")
-        axs[1].imshow(aug_img[0, 0].numpy(), cmap='gray')
-        axs[1].set_title("after Slice 0")
-        for ax in axs:
-            ax.axis('off')
-        plt.tight_layout()
-        plt.show()
-
-
 
 if __name__ == "__main__":
-    generate_fake_npy_dataset(per_class_num=16)
+    generate_fake_npy_dataset(save_dir="../data/NP_3D/setC")
