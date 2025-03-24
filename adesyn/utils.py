@@ -18,7 +18,7 @@ def medi_imread(path):
     
     return img_file
 
-def save_3dimg (save_path,img_file,img):
+def save_3dimg (save_path, img_file, img):
 
     seg2_file = sitk.GetImageFromArray(img)
     spacing = img_file.GetSpacing()
@@ -39,7 +39,7 @@ def compute_loss_smooth(mat):
 def saturate_mask(m, saturate=False):
     return torch.clamp(0.55*torch.tanh(3*(m-0.5))+0.5, 0, 1) if saturate else m
 
-def target_fixed(target,val):
+def target_fixed(target, val):
     target = torch.zeros_like(target)
     for j in range(target.shape[0]):
         target[j]=val
@@ -51,7 +51,7 @@ def classification_loss(logit, target):
     """Compute binary or softmax cross entropy loss."""
     return F.binary_cross_entropy_with_logits(logit, target, size_average=False) / logit.size(0)
 
-def update_lr(lr,optimizer_G,optimizer_2D,optimizer_3D):
+def update_lr(lr, optimizer_G, optimizer_2D, optimizer_3D):
     """Decay learning rates of the generator and discriminator."""
     for param_group in optimizer_G.param_groups:
         param_group['lr'] = lr
@@ -59,7 +59,7 @@ def update_lr(lr,optimizer_G,optimizer_2D,optimizer_3D):
         param_group['lr'] = lr
     for param_group in optimizer_3D.param_groups:
         param_group['lr'] = lr
-    return optimizer_G,optimizer_2D,optimizer_3D
+    return optimizer_G, optimizer_2D, optimizer_3D
 
 def weights_init(m):
     classname = m.__class__.__name__
@@ -136,64 +136,64 @@ class ADNI_MRI(data.Dataset):
         img_arr = img_arr[:,np.newaxis,:,:]
         return torch.FloatTensor(img_arr)
 
-    def augmentation_3d(self,img_arr):
+    def augmentation_3d(self, img_arr):
         p = np.random.random()
         ori_size = int(img_arr.shape[1])
-        r_size = int(np.ceil(np.random.uniform(ori_size*0.9,ori_size)))
-        h = int(np.ceil(np.random.uniform(0,ori_size-r_size)))       
-        w = int(np.ceil(np.random.uniform(0,ori_size-r_size)))  
+        r_size = int(np.ceil(np.random.uniform(ori_size*0.9, ori_size)))
+        h = int(np.ceil(np.random.uniform(0, ori_size-r_size)))       
+        w = int(np.ceil(np.random.uniform(0, ori_size-r_size)))  
 
         if p>0.5:
             for i in range(img_arr.shape[0]):
-                img_2d = img_arr[i,:,:]
+                img_2d = img_arr[i, :, :]
                 img_2d = np.fliplr(img_2d)
-                img_arr[i,:,:] = img_2d 
+                img_arr[i, :, :] = img_2d 
 
         for i in range(img_arr.shape[0]):
-            img_2d = img_arr[i,:,:]
-            img_2d = img_2d[h:h+r_size,w:w+r_size]  
+            img_2d = img_arr[i, :, :]
+            img_2d = img_2d[h:h+r_size, w:w+r_size]  
             img_2d = Image.fromarray(img_2d)
-            img_2d = img_2d.resize((ori_size,ori_size),resample=Image.BICUBIC)
+            img_2d = img_2d.resize((ori_size, ori_size), resample=Image.BICUBIC)
             img_2d = np.array(img_2d)
-            img_arr[i,:,:] = img_2d
+            img_arr[i, :, :] = img_2d
 
-        img_arr = (img_arr/127.5)-1.
-        img_arr = img_arr + np.abs(np.min(img_arr)+1)
+        img_arr = (img_arr / 127.5) - 1.
+        img_arr = img_arr + np.abs(np.min(img_arr) + 1)
         return torch.FloatTensor(img_arr)
 
     def __getitem__(self, index):
         """Return one image and its corresponding attribute label.""" 
         path, label, filename = self.dataset[index]
-        image = np.copy(np.load(path,mmap_mode="r")) #image size:160*192*192
+        image = np.copy(np.load(path, mmap_mode="r")) #image size:160*192*192
 
         if self.mode =="train":
-            seed = int((time.time()+index)%(len(self.dataset)*image.shape[0]))
+            seed = int((time.time() + index) % (len(self.dataset) * image.shape[0]))
             np.random.seed(seed)     
-            s = int(np.ceil(np.random.uniform(20,image.shape[0]-20-1))) # choose middle slice to remove background slice 
-            image = image[s:s+self.nserial,:,:] # choose consecutive slice
+            s = int(np.ceil(np.random.uniform(20, image.shape[0] - 20 - 1))) # choose middle slice to remove background slice 
+            image = image[s:s + self.nserial, :, :] # choose consecutive slice
             image2 = np.copy(image)
 
             aug2d_img = self.augmentation_2d(image) # data augmentation with 2D unit
             aug3d_img = self.augmentation_3d(image2) # data augmentation with 3D unit         
 
-            label_out = torch.FloatTensor(torch.zeros((self.nserial,1))) # make label for consecutive slices                       
+            label_out = torch.FloatTensor(torch.zeros((self.nserial, 1))) # make label for consecutive slices                       
             for i in range(self.nserial):
-                label_out[i,:] = torch.FloatTensor(label)
+                label_out[i, :] = torch.FloatTensor(label)
 
             return aug2d_img, label_out, aug3d_img
 
         elif self.mode=="val":
-            image = (image/127.5)-1.
-            image = image[100,:,:]
-            return torch.FloatTensor(image[np.newaxis,:,:]), torch.FloatTensor(label)    
+            image = (image / 127.5) - 1.
+            image = image[100, :, :]
+            return torch.FloatTensor(image[np.newaxis, :, :]), torch.FloatTensor(label)    
 
         elif self.mode=="test":
-            image = (image/127.5)-1.
-            image_out = torch.FloatTensor(torch.zeros((image.shape[0],1,image.shape[1],image.shape[2])))
+            image = (image / 127.5) - 1.
+            image_out = torch.FloatTensor(torch.zeros((image.shape[0], 1, image.shape[1], image.shape[2])))
             for i in range(image.shape[0]):
-                image_out[i,0,:,:] = torch.FloatTensor(image[i,:,:])
+                image_out[i,0,:,:] = torch.FloatTensor(image[i, :, :])
 
-            label_out = torch.FloatTensor(torch.zeros((image.shape[0],1)))           
+            label_out = torch.FloatTensor(torch.zeros((image.shape[0], 1)))           
             for i in range(image.shape[0]):
                 label_out[i] = torch.FloatTensor(label)
 
