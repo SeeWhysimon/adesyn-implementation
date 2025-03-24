@@ -10,3 +10,6 @@ dependencies = [
     "torch",
     "numpy<2",
 ]
+
+[tool.setuptools.packages.find]
+where = ["."]
