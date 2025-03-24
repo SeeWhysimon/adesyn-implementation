@@ -17,7 +17,7 @@ def generate_fake_npy_dataset(
     save_dir="../data/NP_3D/setA",
     classes=["AD", "MCI", "NM"]
 ):
-    print(f"🚧 开始生成数据，每类 {per_class_num} 张，总共 {per_class_num * len(classes)} 张")
+    print(f"🚧 Generating data... {per_class_num} per class, {per_class_num * len(classes)} in total.")
 
     for cls in classes:
         class_dir = os.path.join(save_dir, cls)
@@ -31,9 +31,9 @@ def generate_fake_npy_dataset(
             out_path = os.path.join(class_dir, f"fake_{cls}_{i:03d}.npy")
             np.save(out_path, fake_data)
 
-            print(f"✅ 已保存：{out_path}")
+            print(f"✅ Saved: {out_path}")
 
-    print(f"\n🎉 所有类别生成完毕，共 {len(classes)} 类 × {per_class_num} 张 = {per_class_num * len(classes)} 张")
+    print(f"\n🎉 Finished generation, {len(classes)} classes * {per_class_num} = {per_class_num * len(classes)} in total.")
 
 def medi_imread_test():
     image_dir = "../data"
@@ -47,23 +47,23 @@ def medi_imread_test():
             break
 
     if image_file is None:
-        print("💩 没找到医学图像文件，请放一张 .nii 或 .mhd 到 root/data 下")
+        print("💩 No medi image detected, please place a .nii or .mhd file to data directory")
         return
 
-    print(f"📂 正在读取图像: {image_file}")
+    print(f"📂 Reading image: {image_file}...")
     img = utils.medi_imread(image_file)
 
     # 打印一些属性
-    print(f"✅ 图像维度：{img.GetDimension()}")
-    print(f"✅ 图像尺寸：{img.GetSize()}")
-    print(f"✅ 像素类型：{img.GetPixelIDTypeAsString()}")
+    print(f"✅ Dimension: {img.GetDimension()}")
+    print(f"✅ Size: {img.GetSize()}")
+    print(f"✅ Pixel type: {img.GetPixelIDTypeAsString()}")
     print(f"✅ Direction: {img.GetDirection()}")
     print(f"✅ Origin: {img.GetOrigin()}")
     print(f"✅ Spacing: {img.GetSpacing()}\n")
 
 def ADNI_MRI_test(img_dir="../data/NP_3D/setA", nserial=3, mode="train", visualize=False):
     dataset = utils.ADNI_MRI(image_dir=img_dir, nserial=nserial, mode=mode)
-    print(f"\n📦 总共加载图像数量: {len(dataset)}")
+    print(f"\n📦 {len(dataset)} images loaded.")
 
     # 读取第一张图像
     aug2d_img, label_out, aug3d_img = dataset[0]
@@ -71,11 +71,11 @@ def ADNI_MRI_test(img_dir="../data/NP_3D/setA", nserial=3, mode="train", visuali
     # 获取原始图像维度
     raw_path = dataset.dataset[0][0]  # .npy 文件路径
     raw_data = np.load(raw_path)
-    print(f"📐 原始图像 shape: {raw_data.shape}")  # [depth, H, W]
+    print(f"📐 Original image shape: {raw_data.shape}")  # [depth, H, W]
 
-    print(f"🎨 增强后 2D 图像 shape: {aug2d_img.shape}")   # [nserial, 1, H, W]
+    print(f"🎨 After 2D augmentation shape: {aug2d_img.shape}")   # [nserial, 1, H, W]
+    print(f"🧱 After 3D augmentation shape: {aug3d_img.shape}")   # [nserial, H, W]（没加 channel）
     print(f"🧾 标签 shape: {label_out.shape}")             # [nserial, 1]
-    print(f"🧱 增强后 3D 图像 shape: {aug3d_img.shape}")   # [nserial, H, W]（没加 channel）
 
     if visualize:
         # 可视化对比原图 vs 增强后图（第0层）
