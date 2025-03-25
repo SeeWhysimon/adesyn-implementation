@@ -1,6 +1,6 @@
 # Implementation for Conditional-GAN-with-an-Attention-based-Generator-and-a-3D-Discriminator-for-3D-Medical-Image
 
-This repository is an implementation for the github repository (ADESyn)[https://github.com/EuijinMisp/ADESyn].
+This repository is an implementation for the github repository [ADESyn](https://github.com/EuijinMisp/ADESyn).
 
 ## Package Installation
 Run `pip install -r requirements.txt` to install basic dependecies. Furthermore, run `pip install -e .` to install local `adesyn` package.
