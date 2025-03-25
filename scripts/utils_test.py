@@ -97,4 +97,4 @@ def ADNI_MRI_test(img_dir="../data/NP_3D/setA", nserial=3, mode="train", visuali
         plt.show()
 
 if __name__ == "__main__":
-    generate_fake_npy_dataset(save_dir="../data/NP_3D/setC")
+    generate_fake_npy_dataset(save_dir="../data/NP_3D/setA")
